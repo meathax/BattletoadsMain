@@ -653,23 +653,56 @@ function bit [63:0] MultStep2(input bit [31:0] a, input bit [1:0] b, input bit [
 		return {maxys[15],minys[15],maxxs[15],minxs[15]};
 	endfunction
 	
+	// The blit microcode supplies the exclusive far corner. Reject a rectangle
+	// only when it has no pixels in the window; a far corner outside the window
+	// alone does not exclude a partially visible blit.
+	function automatic bit [3:0] XYCompareBltWin(input XY_t far, input XY_t size, input XY_t min, input XY_t max);
+		bit signed [15:0] sx, sy;
+		bit signed [17:0] ex, ey;
+		sx = far.X - size.X;
+		sy = far.Y - size.Y;
+		ex = {{2{sx[15]}},sx} + $signed({2'b00,size.X});
+		ey = {{2{sy[15]}},sy} + $signed({2'b00,size.Y});
+		return {sy > $signed(max.Y), size.Y == 0 || ey <= $signed(min.Y),
+		        sx > $signed(max.X), size.X == 0 || ex <= $signed(min.X)};
+	endfunction
+
 	function XY_t XYWinOffset(input XY_t v, input XY_t ws);
 		XY_t res;
 		
-		res.X = ws.X > v.X ? ws.X - v.X : '0;
-		res.Y = ws.Y > v.Y ? ws.Y - v.Y : '0;
+		res.X = $signed(ws.X) > $signed(v.X) ? ws.X - v.X : '0;
+		res.Y = $signed(ws.Y) > $signed(v.Y) ? ws.Y - v.Y : '0;
 
 		return res;
 	endfunction
 	
-	function XY_t WinAdjust(input XY_t dydx, input XY_t wstart, input XY_t wend, input bit wen);
+	function automatic XY_t WinAdjust(input XY_t far, input XY_t dydx, input XY_t wstart, input XY_t wend, input bit wen);
 		XY_t res;
-		bit [15: 0] wdx,wdy;
+		bit [15:0] sx_bits, sy_bits;
+		bit signed [17:0] sx, sy, ex, ey;
+		bit signed [17:0] min_x, min_y, max_x_excl, max_y_excl;
+		bit signed [17:0] near_x, near_y, far_x, far_y;
 		
-		wdx = wend.X - wstart.X + 16'd1;
-		wdy = wend.Y - wstart.Y + 16'd1;
-		res.X = wen && wdx < dydx.X ? wdx : dydx.X;
-		res.Y = wen && wdy < dydx.Y ? wdy : dydx.Y;
+		if (wen) begin
+			sx_bits = far.X - dydx.X;
+			sy_bits = far.Y - dydx.Y;
+			sx = $signed(sx_bits);
+			sy = $signed(sy_bits);
+			ex = sx + $signed({2'b00,dydx.X});
+			ey = sy + $signed({2'b00,dydx.Y});
+			min_x = $signed({{2{wstart.X[15]}},wstart.X});
+			min_y = $signed({{2{wstart.Y[15]}},wstart.Y});
+			max_x_excl = $signed({{2{wend.X[15]}},wend.X}) + 18'sd1;
+			max_y_excl = $signed({{2{wend.Y[15]}},wend.Y}) + 18'sd1;
+			near_x = sx > min_x ? sx : min_x;
+			near_y = sy > min_y ? sy : min_y;
+			far_x = ex < max_x_excl ? ex : max_x_excl;
+			far_y = ey < max_y_excl ? ey : max_y_excl;
+			res.X = far_x > near_x ? far_x - near_x : 16'd0;
+			res.Y = far_y > near_y ? far_y - near_y : 16'd0;
+		end else begin
+			res = dydx;
+		end
 
 		return res;
 	endfunction
@@ -4661,6 +4694,14 @@ rd_keep = 4'hf; rs_low_keep = 4'hf; rs_high_keep = 0;
 		DECI.R = DECI.R | IC[4];
 		DECI.RD = DECI.RD | (IC[3:0] & rd_keep);
 		DECI.RS = DECI.RS | (IC[3:0] & rs_low_keep) | (IC[8:5] & rs_high_keep);
+		// The XY window clip microcycle reads B14 as its far corner through RS.
+		if (STATE == 5'd4 &&
+		    (((IC & 16'hFFD0) == 16'h0F00) ||
+		     ((IC & 16'hFFD0) == 16'h0F80) ||
+		     ((IC & 16'hFFD0) == 16'h0FC0))) begin
+			DECI.R = 1'b1;
+			DECI.RS = 4'd14;
+		end
 		
 		
 		DECI.MMA = IC[15:8] == 8'h09 && IC[7:6] == 2'b10 && !(|STATE_OH[2:0]);

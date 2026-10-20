@@ -3578,12 +3578,12 @@ CLASS_DECI[51].R = 1;
 CLASS_DECI[51].PF = '{PBLT_NONE, POFFS_NONE, WIN_CHECK, PLN_NONE};
 CLASS_DECI[51].LST = 0;
 end
-STATE_OH[4]: begin //WinAdjust(B7.XY)->PIX_DYDX
+STATE_OH[4]: begin //Clip the saved extent using B14's exclusive far corner
 CLASS_DECI[51].RD = 4'd7; rd_keep = 0;
-CLASS_DECI[51].RS = 4'd7; rs_low_keep = 0; rs_high_keep = 0;
+CLASS_DECI[51].RS = 4'd14; rs_low_keep = 0; rs_high_keep = 0;
 CLASS_DECI[51].R = 1;
 CLASS_DECI[51].PF = '{PBLT_NONE, POFFS_NONE, WIN_DADJ, PLN_NONE};
-CLASS_DECI[51].LST = (PIX_WINCC[0] | PIX_WINCC[2]) & PIX_WINEN;
+CLASS_DECI[51].LST = (|PIX_WINCC) & PIX_WINEN;
 end
 STATE_OH[5]: begin //XYWinOffset(B2.XY)->B14.XY
 CLASS_DECI[51].RD = 4'd14; rd_keep = 0;
@@ -3838,12 +3838,12 @@ CLASS_DECI[52].R = 1;
 CLASS_DECI[52].PF = '{PBLT_NONE, POFFS_NONE, WIN_CHECK, PLN_NONE};
 CLASS_DECI[52].LST = 0;
 end
-STATE_OH[4]: begin //WinAdjust(B7.XY)->PIX_DYDX
+STATE_OH[4]: begin //Clip the saved extent using B14's exclusive far corner
 CLASS_DECI[52].RD = 4'd7; rd_keep = 0;
-CLASS_DECI[52].RS = 4'd7; rs_low_keep = 0; rs_high_keep = 0;
+CLASS_DECI[52].RS = 4'd14; rs_low_keep = 0; rs_high_keep = 0;
 CLASS_DECI[52].R = 1;
 CLASS_DECI[52].PF = '{PBLT_NONE, POFFS_NONE, WIN_DADJ, PLN_NONE};
-CLASS_DECI[52].LST = (PIX_WINCC[0] | PIX_WINCC[2]) & PIX_WINEN;
+CLASS_DECI[52].LST = (|PIX_WINCC) & PIX_WINEN;
 end
 STATE_OH[5]: begin //XYWinOffset(B2.XY)->B14.XY
 CLASS_DECI[52].RD = 4'd14; rd_keep = 0;
@@ -4099,12 +4099,12 @@ CLASS_DECI[53].R = 1;
 CLASS_DECI[53].PF = '{PBLT_NONE, POFFS_NONE, WIN_CHECK, PLN_NONE};
 CLASS_DECI[53].LST = 0;
 end
-STATE_OH[4]: begin //WinAdjust(B7.XY)->PIX_DYDX
+STATE_OH[4]: begin //Clip the saved extent using B14's exclusive far corner
 CLASS_DECI[53].RD = 4'd7; rd_keep = 0;
-CLASS_DECI[53].RS = 4'd7; rs_low_keep = 0; rs_high_keep = 0;
+CLASS_DECI[53].RS = 4'd14; rs_low_keep = 0; rs_high_keep = 0;
 CLASS_DECI[53].R = 1;
 CLASS_DECI[53].PF = '{PBLT_NONE, POFFS_NONE, WIN_DADJ, PLN_NONE};
-CLASS_DECI[53].LST = (PIX_WINCC[0] | PIX_WINCC[2]) & PIX_WINEN;
+CLASS_DECI[53].LST = (|PIX_WINCC) & PIX_WINEN;
 end
 STATE_OH[5]: begin //XYWinOffset(B2.XY)->B14.XY
 CLASS_DECI[53].RD = 4'd14; rd_keep = 0;

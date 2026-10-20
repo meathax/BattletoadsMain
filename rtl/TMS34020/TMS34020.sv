@@ -1440,8 +1440,8 @@ module TMS34020 #(parameter DISPLAY_SERVICE_PAUSE = 0)
 				
 				case (DECI.PF.WIN)
 					WIN_INIT:  PIX_DYDX <= RF_RB_Q;
-					WIN_DADJ:  PIX_DYDX <= WinAdjust(RF_RB_Q, WSTART, WEND, &IO_REGS.CONTROL.W);
-					WIN_CHECK: PIX_WINCC <= ALU_XY_CC;
+						WIN_DADJ:  PIX_DYDX <= WinAdjust(RF_RB_Q, PIX_DYDX, WSTART, WEND, &IO_REGS.CONTROL.W);
+					WIN_CHECK: PIX_WINCC <= XYCompareBltWin(RF_RB_Q, PIX_DYDX, WSTART, WEND);
 //					WIN_CHECK: XYWinOffset();
 					default: ;
 				endcase
